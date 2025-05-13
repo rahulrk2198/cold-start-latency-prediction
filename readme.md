@@ -11,6 +11,4 @@ This repository contains the dataset and analysis code used for predicting cold 
 
 ## Future Updates
 
-- Deployment scripts and Docker setup
-- Model training scripts and saved weights
-- Complete end-to-end reproducibility pipeline
+- Deployment scripts and Docker setup for replicating on AWS Platform
