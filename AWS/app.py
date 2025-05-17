@@ -10,7 +10,6 @@ import csv
 import logging
 
 # Set up logging configuration - Modified for Lambda compatibility
-# logging.basicConfig(level=logging.INFO) # Removed this line
 logger = logging.getLogger()
 logger.setLevel(logging.INFO) # Set level directly on the root logger
 
@@ -26,7 +25,7 @@ S3_LOG_FILE = "log.csv"
 model = None
 
 def load_model():
-    test_s3_permissions() # Note: This function may still log an error if GetObject fails
+    test_s3_permissions() # Test whether function has access to the model stored in s3 bucket
     global model
     if model is None:
         logger.info("Downloading Model from S3")
@@ -35,10 +34,8 @@ def load_model():
             s3.download_file(MODEL_BUCKET, MODEL_FILE_NAME, MODEL_PATH)
             logger.info("Model downloaded successfully.")
         except Exception as e:
-            logger.error(f"Error downloading model: {e}") # Use logger.error for exceptions
-            # Depending on requirements, you might want to raise the exception
-            # raise e
-            return None # Return None or handle error appropriately if download fails
+            logger.error(f"Error downloading model: {e}") 
+            return None 
         model = joblib.load(MODEL_PATH)
     return model
 
@@ -101,10 +98,7 @@ def log_metrics(latency_ms, context):
 def test_s3_permissions():
     s3 = boto3.client('s3')
     try:
-        # Attempt to list the objects - Commented out due to missing s3:ListBucket permission in the provided policy
-        # response = s3.list_objects_v2(Bucket=MODEL_BUCKET)
-        # logger.info(f"S3 ListBucket check successful for {MODEL_BUCKET}.") # Removed response from log as it's not available
-
+        
         # Attempt to download the model file to check GetObject permission
         logger.info(f"Attempting test download of {MODEL_FILE_NAME} from {MODEL_BUCKET}...")
         s3.download_file(MODEL_BUCKET, MODEL_FILE_NAME, '/tmp/test_model.pkl')
@@ -113,8 +107,6 @@ def test_s3_permissions():
     except Exception as e:
         # Log specific S3 access errors
         logger.error(f"Error testing S3 permissions for bucket {MODEL_BUCKET}: {e}")
-        # Depending on requirements, you might want to raise the exception here
-        # raise e
 
 def handler(event, context):
     logger.info("Lambda function handler started.")
@@ -122,7 +114,7 @@ def handler(event, context):
         start_time = time.perf_counter()
 
         # Load the model (includes S3 permission test)
-        loaded_model = load_model() # Renamed variable to avoid conflict with global 'model'
+        loaded_model = load_model() 
         if loaded_model is None:
              logger.error("Failed to load model. Exiting.")
              return {
